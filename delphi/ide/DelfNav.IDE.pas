@@ -576,20 +576,181 @@ begin
   HideHover;
 end;
 
-// the declaration's line as written, and where it is: from the editor's text for the open file
-function DeclarationHint(const T: TImplTarget; const View: IOTAEditView): string;
+function IsIdentChar(C: Char): Boolean;
+begin
+  Exit( CharInSet(C, ['A'..'Z', 'a'..'z', '0'..'9', '_']) );
+end;
+
+function TextLines(const Text: string): TArray<string>;
+begin
+  Exit( Text.Replace(#13#10, #10).Replace(#13, #10).Split([#10]) );
+end;
+
+// a routine heading's own name, the last part of its dotted name (TFoo<T>.Bar: Bar), as columns
+// from 1, S2 one past the end; False when the line is no heading
+function HeadingName(const Line: string; out S1, S2: Integer): Boolean;
+begin
+  Result := False;
+  var I := 1;
+  const N = Line.Length;
+  var Word := '';
+  // the leading words: class, then the routine's kind
+  for var Round := 1 to 2 do
+  begin
+    while (I <= N) and (Line[I] = ' ') do
+      Inc(I);
+    const W1 = I;
+    while (I <= N) and IsIdentChar(Line[I]) do
+      Inc(I);
+    Word := LowerCase(Copy(Line, W1, I - W1));
+    if Word <> 'class' then
+      Break;
+  end;
+  if not ((Word = 'procedure') or (Word = 'function') or (Word = 'constructor') or
+          (Word = 'destructor') or (Word = 'operator')) then
+    Exit;
+  repeat
+    while (I <= N) and (Line[I] = ' ') do
+      Inc(I);
+    S1 := I;
+    while (I <= N) and IsIdentChar(Line[I]) do
+      Inc(I);
+    S2 := I;
+    if S2 = S1 then
+      Exit;
+    if (I <= N) and (Line[I] = '<') then  // a generic's parameters
+    begin
+      var Depth := 0;
+      repeat
+        if Line[I] = '<' then Inc(Depth)
+        else if Line[I] = '>' then Dec(Depth);
+        Inc(I);
+      until (Depth = 0) or (I > N);
+    end;
+    if (I > N) or (Line[I] <> '.') then
+      Break;
+    Inc(I);
+  until False;
+  Result := True;
+end;
+
+// a parameter's part of its heading, const, var or out kept (the user, 22 Nov: "keep const (var?)
+// for now"): from the "(" or ";" before the name at Col0 (from 0) to the end of its type; only
+// for a name inside an open "(", or with its type ended by ")"; False for anything else
+function ParameterHint(const Line: string; Col0: Integer; out Hint: string): Boolean;
+begin
+  Result := False;
+  const N = Line.Length;
+  if (Col0 < 0) or (Col0 >= N) then
+    Exit;
+  var Depth := 0;
+  var From := 1;                      // after the last "(" or ";" before the name
+  for var I := 1 to Col0 do
+    if Line[I] = '(' then
+    begin
+      Inc(Depth);
+      From := I + 1;
+    end
+    else if Line[I] = ')' then
+      Dec(Depth)
+    else if Line[I] = ';' then
+      From := I + 1;
+  var I := Col0 + 1;
+  while (I <= N) and IsIdentChar(Line[I]) do
+    Inc(I);
+  // past any other names sharing the type (a, b: Integer) to the colon
+  while (I <= N) and CharInSet(Line[I], [' ', ',', 'A'..'Z', 'a'..'z', '0'..'9', '_']) do
+    Inc(I);
+  if (I = Col0 + 1) or (I > N) or (Line[I] <> ':') then
+    Exit;
+  var Inner := 0;
+  while (I <= N) and not ((Inner = 0) and CharInSet(Line[I], [';', ')', '='])) do
+  begin
+    if CharInSet(Line[I], ['(', '[', '<']) then Inc(Inner)
+    else if CharInSet(Line[I], [')', ']', '>']) then Dec(Inner);
+    Inc(I);
+  end;
+  if not ((Depth > 0) or ((I <= N) and (Line[I] = ')'))) then
+    Exit;
+  Hint := Copy(Line, From, I - From).Trim;
+  Result := True;
+end;
+
+// a routine's declaration split: the heading to its first ";" at depth 0, and the directives after
+// it (overload, static, inline ...); False when the line declares no routine
+function SplitDirectives(const Decl: string; out Heading: string; out Directives: TArray<string>): Boolean;
+begin
+  var S1, S2: Integer;
+  Result := HeadingName(Decl, S1, S2);
+  if not Result then
+    Exit;
+  var Depth := 0;
+  var I := 1;
+  while (I <= Decl.Length) and not ((Depth = 0) and (Decl[I] = ';')) do
+  begin
+    if CharInSet(Decl[I], ['(', '[', '<']) then Inc(Depth)
+    else if CharInSet(Decl[I], [')', ']', '>']) then Dec(Depth);
+    Inc(I);
+  end;
+  Heading := Copy(Decl, 1, I).Trim;
+  Directives := nil;
+  for var D in Copy(Decl, I + 1, MaxInt).Split([';']) do
+    if D.Trim <> '' then
+      Directives := Directives + [D.Trim];
+end;
+
+// what the hover says of the name at Line, columns S1..S2 (from 1), in the view. Line 1: its
+// declaration as written, a routine's without its directives, a parameter's part of its heading.
+// Line 2: the qualified name, then dimmed (a tab before) the overload count, the directives, and
+// the unit when it isn't this one (the user, 22 Nov: "overload etc might go on 2nd line", "keep
+// qualified name", "dimmed is prob good, let's try. 3 overloads is very good", "give unit - we'll
+// judge what we think"; delfc's "// from Unit" in Zed, the reference). No file or line ("we don't
+// need the where"). Nothing where it is already on the screen: the name's own declaration, or a
+// heading's own name ("we want to show info that isn't visible - like what Tcompbldr is .. maybe
+// only that on that line")
+function DeclarationHint(const T: TImplTarget; const View: IOTAEditView; Line, S1, S2: Integer): string;
 begin
   Result := '';
-  var Text: string;
+  const Here = TextLines(TEncoding.UTF8.GetString(BufferText(View.Buffer)));
+  if (Line >= 1) and (Line <= Length(Here)) then
+  begin
+    var H1, H2: Integer;
+    if HeadingName(Here[Line - 1], H1, H2) and (H1 = S1) and (H2 = S2) then
+      Exit;                           // a heading's own name
+  end;
+  var Lines: TArray<string>;
   if SameText(T.Path, View.Buffer.FileName) then
-    Text := TEncoding.UTF8.GetString(BufferText(View.Buffer))
+  begin
+    if (T.Line = Line) and (T.Col + 1 = S1) then
+      Exit;                           // its own declaration, under the pointer
+    Lines := Here;
+  end
   else
-    Text := TFile.ReadAllText(T.Path);
-  const Lines = Text.Replace(#13#10, #10).Replace(#13, #10).Split([#10]);
+    Lines := TextLines(TFile.ReadAllText(T.Path));
   if (T.Line < 1) or (T.Line > Length(Lines)) then
     Exit;
-  Result := Lines[T.Line - 1].Trim + sLineBreak +
-            T.Name + '  -  ' + ExtractFileName(T.Path) + ' ' + IntToStr(T.Line);
+  const Decl = Lines[T.Line - 1];
+  if ParameterHint(Decl, T.Col, Result) then
+    Exit;                             // a parameter: its own line says it
+  var Heading: string;
+  var Directives: TArray<string>;
+  var Dimmed: TArray<string> := nil;
+  if SplitDirectives(Decl, Heading, Directives) then
+  begin
+    const Count = Overloads(T.Path, T.Line, T.Col);
+    if Count > 1 then
+      Dimmed := [IntToStr(Count) + ' overloads'];
+    for var D in Directives do
+      if not ((Count > 1) and SameText(D, 'overload')) then
+        Dimmed := Dimmed + [D];
+  end
+  else
+    Heading := Decl.Trim;
+  if not SameText(T.Path, View.Buffer.FileName) then
+    Dimmed := Dimmed + ['from ' + ChangeFileExt(ExtractFileName(T.Path), '')];
+  Result := Heading + sLineBreak + T.Name;
+  if Dimmed <> nil then
+    Result := Result + #9 + string.Join(' '#$00B7' ', Dimmed);
 end;
 
 procedure TGoToImpl.OnHover(Sender: TObject);
@@ -613,7 +774,7 @@ begin
     const Found = Query(View, FHoverPos, akDeclaration, 0);
     if Length(Found) <> 1 then
       Exit;
-    const Text = DeclarationHint(Found[0], View);
+    const Text = DeclarationHint(Found[0], View, FSpanLine, FSpan1, FSpan2);
     if Text = '' then
       Exit;
     var R := FHint.CalcHintRect(Screen.Width div 2, Text, nil);

@@ -59,6 +59,10 @@ function Definitions(const Path, Text: string; Line, Character: Integer;
 function TypeDefinitions(const Path, Text: string; Line, Character: Integer;
   WaitMs: Cardinal = 30000): TArray<TImplTarget>;
 
+// how many overloads the method declared at Line (from 1), Col (from 0) of the file at Path has,
+// itself included: 0 when no method of the index is declared there (a unit's routine, a field)
+function Overloads(const Path: string; Line, Col: Integer): Integer;
+
 // every use of the name at Line, Character across the index: each identifier of that name whose
 // definition (as Definitions finds it) is the same place; the declaration itself too if
 // IncludeDeclaration. TextOf gives an editor's text for a file it has open ('' for none: the
@@ -1569,6 +1573,27 @@ begin
     finally
       Q.Free;
     end;
+  finally
+    Lock.Leave;
+  end;
+end;
+
+function Overloads(const Path: string; Line, Col: Integer): Integer;
+begin
+  Result := 0;
+  if Ready.WaitFor(0) <> wrSignaled then
+    Exit;
+  Lock.Enter;
+  try
+    const Idx = FileIndexOf(Path);
+    if Idx < 0 then
+      Exit;
+    for var Info in Types.Values do
+      if Info.FileIdx = Idx then
+        for var L in Info.Sigs.Values do
+          for var S in L do
+            if (S.Line = Line) and (S.Col = Col) then
+              Exit(L.Count);
   finally
     Lock.Leave;
   end;
