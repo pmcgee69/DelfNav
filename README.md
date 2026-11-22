@@ -68,7 +68,7 @@ only units.
 
 Split out of [delphipp](https://github.com/pmcgee69/delphi-preprocessor-starter) (its
 go-to-implementation branch) on 22 Nov 2026, the files' history kept: the commits before that
-date are delphipp's. Named for [Delf](https://github.com/pmcgee69), Delphi with a stricter type
+date are delphipp's. Named for [Delf](https://github.com/pmcgee69/DelfPascal), Delphi with a stricter type
 system, of which delfnav is a part that needs none of it. Reads Delphi with
 [TreeSitter4D](https://github.com/pmcgee69/TreeSitter4D) and Alexander Liberov's
 tree-sitter-delphi13 grammar (MIT).
