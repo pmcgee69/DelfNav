@@ -419,7 +419,7 @@ begin
   FWait.OnTimer  := OnWait;
   const A  = TAction.Create(FActions);
   A.ActionList := FActions;
-  A.Caption    := 'Go to Implementation';
+  A.Caption    := 'Go to Implementation (DelfNav)';
   A.Hint       := 'The classes'' methods that implement this interface method (Ctrl+Shift+click)';
   A.Category   := MenuCategory;
   A.OnExecute  := OnExecute;
@@ -1039,14 +1039,16 @@ begin
   Notifier := TGoToImpl.Create;
   NotifierIndex := (BorlandIDEServices as INTACodeEditorServices).AddEditorEventsNotifier(Notifier);
   try
+    // each list after the one before, not all after Identifier (that left their order to the IDE,
+    // uneven): Find Declaration, Go to Implementation, Go to Type Definition, Find References
     const Menu = (BorlandIDEServices as IOTAEditorServices).GetEditorLocalMenu;
-    Menu.RegisterActionList(Notifier.FActions, MenuCategory, cEdMenuCatIdentifier);
-    MenuAdded := True;
     Menu.RegisterActionList(Notifier.FDeclActions, DeclCategory, cEdMenuCatIdentifier);
     DeclAdded := True;
-    Menu.RegisterActionList(Notifier.FTypeActions, TypeCategory, cEdMenuCatIdentifier);
+    Menu.RegisterActionList(Notifier.FActions, MenuCategory, DeclCategory);
+    MenuAdded := True;
+    Menu.RegisterActionList(Notifier.FTypeActions, TypeCategory, MenuCategory);
     TypeAdded := True;
-    Menu.RegisterActionList(Notifier.FRefsActions, RefsCategory, cEdMenuCatIdentifier);
+    Menu.RegisterActionList(Notifier.FRefsActions, RefsCategory, TypeCategory);
     RefsAdded := True;
   except
     // Ctrl+Shift+click alone
