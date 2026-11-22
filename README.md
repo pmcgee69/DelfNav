@@ -2,7 +2,8 @@
 
 **Go to implementation, definition, type definition and find references for Delphi**, from a
 [tree-sitter](https://tree-sitter.github.io/) index of your units, in the Delphi IDE and in any
-editor that speaks LSP. It works on plain `.pas`: no Delf, no preprocessor, no compiler run.
+editor that speaks LSP. It works on plain `.pas` and `.dpr`: no Delf, no preprocessor, no
+compiler run.
 
 In Delphi, Ctrl+click on `x.DoSomething()` takes you to the interface. DelfNav takes you to the
 classes that implement it, and from a virtual method to each override:
@@ -27,7 +28,7 @@ DelphiLSP's "implementation" is the old Ctrl+Shift+Up/Down, a method's declarati
 - **Find Declaration (DelfNav)** and **Go to Type Definition (DelfNav)**, for when the IDE's own
   can't tell (a unit opened with no project, say).
 
-The index is the active project's: the `.pas` files in its folder and below, and in each folder
+The index is the active project's: the `.pas` and `.dpr` files in its folder and below, and in each folder
 of its search path, read in the background. Try it on
 [`examples/go-to-implementation`](examples/go-to-implementation/README.md).
 
@@ -61,8 +62,9 @@ counts and times the answers: the check run over 42 repositories before each cha
 
 A sketch, not the compiler: overloads are told apart by the number of arguments and the types
 it can see (literals, enum values, typed variables; where it can't tell, it offers each one that
-fits), no `as` or `with`, generic constraints unchecked. Program files (`.dpr`) aren't indexed,
-only units.
+fits), no `as` or `with`, generic constraints unchecked. Programs (`.dpr`) are indexed after the
+units: a program's own types and routines are found from inside it, and where a unit declares
+the same name, it's the unit's.
 
 ## Where it came from
 
