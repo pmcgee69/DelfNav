@@ -18,6 +18,13 @@ classes that implement it, and from a virtual method to each override:
 Checked against DelphiLSP itself, 22 Nov 2026: [`tools/delphilsp-probe`](tools/delphilsp-probe/README.md).
 DelphiLSP's "implementation" is the old Ctrl+Shift+Up/Down, a method's declaration to its body.
 
+**Load times, side by side** (22 Nov 2026, one machine). DelphiLSP opening a VCL project loads
+prebuilt LSIF indexes of the libraries (`lib\win32\...\*.lsif`): `xmlrtl`, `vcl` and `rtl`,
+486 MB, in about **9.4 s** (timed from a screen recording, frame by frame at 0.2 s; they seem to
+load in parallel). DelfNav parsing the same libraries' source (556 units, one at a time):
+**8.2 s** warm, 15.4 s cold. Delphi's LSIF files hold definitions and hovers only: no
+implementations, no references.
+
 ## In the Delphi IDE
 
 `DelfNavIDE.bpl`, an IDE package, beside the IDE's own Code Insight:
