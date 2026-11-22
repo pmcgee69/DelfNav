@@ -1146,6 +1146,12 @@ begin
     const More = FRefsMore;
     FRefsKey  := Key;
     FRefsNext := More.Next;
+    // what they are references to, qualified, and its unit (the user, 22 Nov: "in the msg windows
+    // "291 references" should also make clear what the ref was from")
+    var Subject := '';
+    const Decl = Query(View, View.CursorPos, akDeclaration, 0);
+    if Length(Decl) = 1 then
+      Subject := Format(' to %s (%s)', [Decl[0].Name, ChangeFileExt(ExtractFileName(Decl[0].Path), '')]);
     const Messages = BorlandIDEServices as IOTAMessageServices;
     var Group := Messages.GetGroup(RefsGroup);
     if Group = nil then
@@ -1157,13 +1163,14 @@ begin
     end;
     Inc(FRefsCount, Length(Found));
     if More.Common then
-      Messages.AddTitleMessage('A name every unit uses (Integer, string, TObject ...): its uses aren''t listed', Group)
+      Messages.AddTitleMessage('A name every unit uses (Integer, string, TObject ...): its uses aren''t listed' +
+        Subject, Group)
     else if GoOn then
-      Messages.AddTitleMessage(Format('%d more (%d in all)', [Length(Found), FRefsCount]), Group)
+      Messages.AddTitleMessage(Format('%d more references%s (%d in all)', [Length(Found), Subject, FRefsCount]), Group)
     else if Found = nil then
-      Messages.AddTitleMessage(Format('No references found (%d units read)', [More.Read]), Group)
+      Messages.AddTitleMessage(Format('No references found%s (%d units read)', [Subject, More.Read]), Group)
     else
-      Messages.AddTitleMessage(Format('%d references', [Length(Found)]), Group);
+      Messages.AddTitleMessage(Format('%d references%s', [Length(Found), Subject]), Group);
     for var T in Found do
     begin
       var Ref: Pointer;
