@@ -1,6 +1,6 @@
 program NavSweep;
 
-{ DelphiPP.Impl, the index behind go to definition, implementation and find references (in Zed
+{ DelfNav.Index, the index behind go to definition, implementation and find references (in Zed
   and in the IDE), over a repository as an editor would ask it: Go to Definition and Go to
   Implementation on identifiers spread through its units, Find References on a tenth of them.
   Counts answers and failures, and times each kind. Run over the user's corpus of 42 Delphi
@@ -15,7 +15,7 @@ program NavSweep;
 
 uses
   System.SysUtils, System.Classes, System.IOUtils, System.Diagnostics, System.Generics.Collections,
-  System.Math, TreeSitter.Api, DelphiPP.Impl;
+  System.Math, TreeSitter.Api, DelfNav.Index;
 
 type
   TSpot = record

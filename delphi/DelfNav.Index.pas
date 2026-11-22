@@ -1,8 +1,8 @@
-unit DelphiPP.Impl;
+unit DelfNav.Index;
 
 { Go to implementation: from a call on an interface, `x.DoSomething()`, to each class's method
   that implements it, across the workspace's units. Delf's experiments 125 and 125b
-  (experiments/ag/native/TsImpl.dpr), behind the language server (DelphiPP.Lsp's
+  (experiments/ag/native/TsImpl.dpr), behind the language server (DelfNav.Lsp's
   textDocument/implementation): Ctrl+click goes to the interface, this goes to the classes, a
   list when there is more than one. Wished for by a Delphi developer, passed on by the user:
   "In delphi it's so much harder to navigate to the implementation of an interface, and it's one
