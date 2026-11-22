@@ -39,6 +39,9 @@ const
   TypeCategory = 'DelfNav.GoToTypeDefinition';
   RefsCategory = 'DelfNav.FindReferences';
   RefsGroup    = 'DelfNav: References';
+  // the mouse at rest on a name this long before its hint is asked for: Zed's and VS Code's
+  // default (was 600, restarted by every small move: user, 22 Nov, "at least an extra second")
+  HoverDelay   = 300;
 
 type
   TAskKind = (akImplementation, akDeclaration, akTypeDefinition, akReferences);
@@ -289,6 +292,22 @@ begin
     (BorlandIDEServices as INTACodeEditorServices).InvalidateTopEditor;
   except
   end;
+  // and again once the IDE has finished this message: invalidated here, the old picture survived
+  // (user, 22 Nov, Find Declaration on Guard.CheckNotNull: line numbers twice, old rows among new,
+  // right only after switching tabs and back). The editor's window and its children, the gutter
+  // too, erased and painted at once.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      try
+        const Editor = (BorlandIDEServices as INTACodeEditorServices).TopEditor;
+        if (Editor <> nil) and Editor.HandleAllocated then
+          RedrawWindow(Editor.Handle, nil, 0,
+            RDW_INVALIDATE or RDW_ERASE or RDW_ALLCHILDREN or RDW_UPDATENOW or RDW_FRAME);
+      except
+        // the next paint puts it right
+      end;
+    end);
 end;
 
 { the IDE's back and forward arrows (user, 20 Nov: "can we also get the back and forward arrows in
@@ -515,6 +534,11 @@ begin
     const Line = State.LineState[Visible].LogicalLineNum;
     if (FHintText <> '') and (Line = FSpanLine) and (Col >= FSpan1) and (Col < FSpan2) then
       Exit;                           // still over the name its hint is for
+    // still over the name a hint is about to be asked for: the wait goes on, not starting again
+    // with each small move (user, 22 Nov: "our hover takes at least an extra second")
+    if (FHintText = '') and FHover.Enabled and (FHoverEd = Editor) and (Line = FSpanLine) and
+       (Col >= FSpan1) and (Col < FSpan2) and (Shift * [ssCtrl, ssAlt, ssShift] = []) then
+      Exit;
     if (FHintText <> '') and (FSpanLine = -1) and
        (Abs(Mouse.CursorPos.X - FMessageAt.X) + Abs(Mouse.CursorPos.Y - FMessageAt.Y) < 6) then
       Exit;                           // a message by the cursor: until the mouse really moves
@@ -538,7 +562,8 @@ begin
     FSpanLine := Line;
     FSpan1 := A;
     FSpan2 := B;
-    FHover.Interval := 600;
+    FHover.Enabled  := False;         // a new name: the wait from now
+    FHover.Interval := HoverDelay;
     FHover.Enabled  := True;
   except
     // the editor goes on whatever happens here
