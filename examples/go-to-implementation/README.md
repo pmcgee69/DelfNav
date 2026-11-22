@@ -19,7 +19,7 @@ Open `GoToImpl.dpr` here. In `Shapes.pas`, at the end:
 | `procedure DoSomething; virtual;` in `TBase` | the same two |
 | `function TBase.Value` (not virtual) | `TBase.Value` alone |
 
-**Find References (delfnav)**, on the same menu, lists every use in the Messages view. Here, on
+**Find References (DelfNav)**, on the same menu, lists every use in the Messages view. Here, on
 `DoSomething` in `IMyInterface`: the declaration, `x.DoSomething()` in `Use`, and in `Fields.pas`
 `FService.DoSomething`, `FKids.DoSomething` (an `IChild` inherits it) and
 `CreateMyObject.DoSomething`. On `IMyInterface` itself: its 10 uses, both units.
@@ -43,7 +43,7 @@ Delphi 13's own language server, `DelphiLSP.exe`, says it provides implementatio
 (`implementationProvider: true`), but asked directly (22 Nov 2026, with
 [`tools/delphilsp-probe`](../../tools/delphilsp-probe/README.md)) it's the old Ctrl+Shift+Up/Down:
 
-| Asked at | DelphiLSP: definition | DelphiLSP: implementation | delfnav: implementation |
+| Asked at | DelphiLSP: definition | DelphiLSP: implementation | DelfNav: implementation |
 |---|---|---|---|
 | `S.Area`, `S` an interface | the interface's `Area` | **nothing** | each class's `Area` |
 | `A.Speak`, `Speak` virtual, abstract | `TAnimal.Speak` | **nothing** | each override |
@@ -53,4 +53,4 @@ Delphi 13's own language server, `DelphiLSP.exe`, says it provides implementatio
 
 It has no references at all (`textDocument/references`: *Method not found*), and no type
 definition. The IDE talks to one DelphiLSP (with two agents it starts, `-Name Agent0` and
-`Agent1`), with no setting for another server; delfnav's package works beside it.
+`Agent1`), with no setting for another server; DelfNav's package works beside it.

@@ -5,7 +5,7 @@ package DelfNavIDE;
   bin) and the 64-bit one (in bin64). delphipp's DelphiPPIDE contains these units too: install
   one or the other. }
 
-{$DESCRIPTION 'delfnav: go to implementation and find references'}
+{$DESCRIPTION 'DelfNav: go to implementation and find references'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 

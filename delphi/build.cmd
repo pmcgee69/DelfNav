@@ -20,7 +20,7 @@ rem an editor may be running delfnav.exe, which Windows won't let dcc overwrite 
 rem rename: the old one runs on until the editor restarts it, and is deleted next time
 del /q %OUT%\delfnav.old-*.exe 2>nul
 if exist %OUT%\delfnav.exe move /y %OUT%\delfnav.exe %OUT%\delfnav.old-%RANDOM%.exe >nul
-for %%p in (delfnav NavSweep) do (
+for %%p in (DelfNav NavSweep) do (
   %DCC% -Q -B -E%OUT% -NU%OUT%\dcu "-NSSystem;Winapi" -UTreeSitter4D\delphi %%p.dpr || exit /b 1
 )
 del /q %OUT%\delfnav.old-*.exe 2>nul

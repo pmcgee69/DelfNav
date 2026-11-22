@@ -2,7 +2,7 @@ unit DelfNav.IDE;
 
 { Go to implementation in the Delphi IDE's editor: on a call through an interface,
   `x.DoSomething()`, each class's method that implements it, as Zed has it through
-  delfnav's language server (..\DelfNav.Index.pas, the same index). Ctrl+click goes
+  DelfNav's language server (..\DelfNav.Index.pas, the same index). Ctrl+click goes
   to the interface; Ctrl+Shift+click on the method's name, or Go to Implementation on
   the editor's right-click menu (after Find Declaration), goes to the class: straight
   there when there is one, a menu to choose from when there are more. Wished for by
@@ -11,7 +11,7 @@ unit DelfNav.IDE;
   people don't use them as much as they could/should." (Ctrl+Alt+click, the first
   way, is gone: the user, 21 Nov, "delete ^Alt-click".)
 
-  Find References (delfnav), on the same menu: every use of the name, listed in the
+  Find References (DelfNav), on the same menu: every use of the name, listed in the
   Messages view, where a double-click opens it.
 
   The index is the active project's: the .pas files in its folder and below, and
@@ -38,7 +38,7 @@ const
   DeclCategory = 'DelfNav.FindDeclaration';
   TypeCategory = 'DelfNav.GoToTypeDefinition';
   RefsCategory = 'DelfNav.FindReferences';
-  RefsGroup    = 'delfnav: References';
+  RefsGroup    = 'DelfNav: References';
 
 type
   TAskKind = (akImplementation, akDeclaration, akTypeDefinition, akReferences);
@@ -411,8 +411,8 @@ begin
   FDeclActions := TActionList.Create(nil);
   const D  = TAction.Create(FDeclActions);
   D.ActionList := FDeclActions;
-  D.Caption    := 'Find Declaration (delfnav)';
-  D.Hint       := 'Where this name is declared, from delfnav''s index';
+  D.Caption    := 'Find Declaration (DelfNav)';
+  D.Hint       := 'Where this name is declared, from DelfNav''s index';
   D.Category   := DeclCategory;
   D.OnExecute  := OnFindDeclaration;
   D.OnUpdate   := OnUpdateDeclaration;
@@ -421,8 +421,8 @@ begin
   FTypeActions := TActionList.Create(nil);
   const Y  = TAction.Create(FTypeActions);
   Y.ActionList := FTypeActions;
-  Y.Caption    := 'Go to Type Definition (delfnav)';
-  Y.Hint       := 'Where this name''s type is declared, from delfnav''s index';
+  Y.Caption    := 'Go to Type Definition (DelfNav)';
+  Y.Hint       := 'Where this name''s type is declared, from DelfNav''s index';
   Y.Category   := TypeCategory;
   Y.OnExecute  := OnTypeDefinition;
   Y.OnUpdate   := OnUpdateTypeDefinition;
@@ -430,8 +430,8 @@ begin
   FRefsActions := TActionList.Create(nil);
   const R  = TAction.Create(FRefsActions);
   R.ActionList := FRefsActions;
-  R.Caption    := 'Find References (delfnav)';
-  R.Hint       := 'Every use of this name, from delfnav''s index, in the Messages view';
+  R.Caption    := 'Find References (DelfNav)';
+  R.Hint       := 'Every use of this name, from DelfNav''s index, in the Messages view';
   R.Category   := RefsCategory;
   R.OnExecute  := OnFindReferences;
   R.OnUpdate   := OnUpdateReferences;
@@ -981,11 +981,11 @@ begin
     for var T in Found do
     begin
       var Ref: Pointer;
-      Messages.AddToolMessage(T.Path, T.Name, 'delfnav', T.Line, T.Col + 1, nil, Ref, Group);
+      Messages.AddToolMessage(T.Path, T.Name, 'DelfNav', T.Line, T.Col + 1, nil, Ref, Group);
     end;
     if More.Next >= 0 then
       Messages.AddTitleMessage(Format('... %d of %d units read in half a second: right-click here, ' +
-        'Find More References (delfnav), for the rest', [More.Read, More.Total]), Group);
+        'Find More References (DelfNav), for the rest', [More.Read, More.Total]), Group);
     Messages.ShowMessageView(Group);
   except
     // the editor goes on whatever happens here
@@ -999,9 +999,9 @@ begin
   try
     const View = (BorlandIDEServices as IOTAEditorServices).TopView;
     if (View <> nil) and (View.Buffer <> nil) and (FRefsNext > 0) and (RefsKey(View) = FRefsKey) then
-      FRefsAction.Caption := 'Find More References (delfnav)'
+      FRefsAction.Caption := 'Find More References (DelfNav)'
     else
-      FRefsAction.Caption := 'Find References (delfnav)';
+      FRefsAction.Caption := 'Find References (DelfNav)';
   except
   end;
   UpdateFor(Sender as TAction, akDeclaration);

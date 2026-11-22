@@ -1,6 +1,6 @@
 unit DelfNav.Lsp;
 
-{ delfnav's language server (delfnav --lsp): go to definition, declaration, type definition and
+{ DelfNav's language server (delfnav --lsp): go to definition, declaration, type definition and
   implementation, and find references, from DelfNav.Index, for any editor that speaks LSP. It
   runs beside Delphi's own DelphiLSP, which does completion, signature help and the compiler's
   errors; this one claims only what DelphiLSP doesn't do, or can't (22 Nov: DelphiLSP's
@@ -12,7 +12,7 @@ unit DelfNav.Lsp;
   stdout, Content-Length framed. Positions are LSP's: lines, and columns in UTF-16 units, which
   is what a Delphi string counts.
 
-  Split out of delphipp's DelphiPP.Lsp (the user, 22 Nov: "delfnav", delphipp using it). }
+  Split out of delphipp's DelphiPP.Lsp (the user, 22 Nov: "DelfNav", delphipp using it). }
 
 interface
 
@@ -171,7 +171,7 @@ end;
 
 function TNavServer.Name: string;
 begin
-  Exit( 'delfnav' );
+  Exit( 'DelfNav' );
 end;
 
 procedure TNavServer.Capabilities(Caps: TJSONObject);

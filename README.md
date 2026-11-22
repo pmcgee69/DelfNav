@@ -1,13 +1,13 @@
-# delfnav
+# DelfNav
 
 **Go to implementation, definition, type definition and find references for Delphi**, from a
 [tree-sitter](https://tree-sitter.github.io/) index of your units, in the Delphi IDE and in any
 editor that speaks LSP. It works on plain `.pas`: no Delf, no preprocessor, no compiler run.
 
-In Delphi, Ctrl+click on `x.DoSomething()` takes you to the interface. delfnav takes you to the
+In Delphi, Ctrl+click on `x.DoSomething()` takes you to the interface. DelfNav takes you to the
 classes that implement it, and from a virtual method to each override:
 
-| Asked at | Delphi's own DelphiLSP | delfnav |
+| Asked at | Delphi's own DelphiLSP | DelfNav |
 |---|---|---|
 | `x.DoSomething()`, `x` an interface | the interface's declaration | **each class's method** (`TBase.DoSomething`, `TDerived.DoSomething`, and `TOther.Run`, which a method resolution clause maps to it) |
 | a virtual or abstract method | its declaration | **each override** |
@@ -23,8 +23,8 @@ DelphiLSP's "implementation" is the old Ctrl+Shift+Up/Down, a method's declarati
 
 - **Ctrl+Shift+click** a method's name, or right-click it and choose **Go to Implementation**:
   one implementation goes straight there, more show a menu.
-- **Find References (delfnav)**: every use, in the Messages view.
-- **Find Declaration (delfnav)** and **Go to Type Definition (delfnav)**, for when the IDE's own
+- **Find References (DelfNav)**: every use, in the Messages view.
+- **Find Declaration (DelfNav)** and **Go to Type Definition (DelfNav)**, for when the IDE's own
   can't tell (a unit opened with no project, say).
 
 The index is the active project's: the `.pas` files in its folder and below, and in each folder
@@ -37,8 +37,8 @@ A language server on stdin and stdout, meant to run **beside** DelphiLSP, not in
 it claims only implementation, definition, declaration, type definition and references, and
 leaves completion, signature help and the compiler's errors to DelphiLSP.
 
-**Zed**, for now: delphipp's Zed extension runs `delphipp.exe --lsp`, which has delfnav's
-navigation built in (delphipp uses delfnav). A Zed extension for delfnav alone is to come.
+**Zed**, for now: delphipp's Zed extension runs `delphipp.exe --lsp`, which has DelfNav's
+navigation built in (delphipp uses DelfNav). A Zed extension for DelfNav alone is to come.
 
 ## Building
 
@@ -52,7 +52,7 @@ delphi\ide\build.cmd            delphi\ide\bin\win32\DelfNavIDE.bpl and ...\win6
 
 Install the package from the IDE (Component > Install Packages > Add): the `win32` one in the
 32-bit IDE (`bin\bds.exe`), the `win64` one in the 64-bit IDE (`bin64\bds.exe`). delphipp's
-`DelphiPPIDE.bpl` contains delfnav's units too: install one or the other, not both.
+`DelphiPPIDE.bpl` contains DelfNav's units too: install one or the other, not both.
 
 `NavSweep.exe <folder>` asks the index the way an editor would, over a whole repository, and
 counts and times the answers: the check run over 42 repositories before each change.
@@ -69,7 +69,7 @@ only units.
 Split out of [delphipp](https://github.com/pmcgee69/delphi-preprocessor-starter) (its
 go-to-implementation branch) on 22 Nov 2026, the files' history kept: the commits before that
 date are delphipp's. Named for [Delf](https://github.com/pmcgee69/DelfPascal), Delphi with a stricter type
-system, of which delfnav is a part that needs none of it. Reads Delphi with
+system, of which DelfNav is a part that needs none of it. Reads Delphi with
 [TreeSitter4D](https://github.com/pmcgee69/TreeSitter4D) and Alexander Liberov's
 tree-sitter-delphi13 grammar (MIT).
 
