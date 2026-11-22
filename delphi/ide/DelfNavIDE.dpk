@@ -2,8 +2,8 @@ package DelfNavIDE;
 
 { Go to implementation, definition, type definition and find references in the Delphi IDE's
   editor: see DelfNav.IDE.pas. Built by build.cmd beside it, for the 32-bit IDE (bds.exe in
-  bin) and the 64-bit one (in bin64). delphipp's DelphiPPIDE contains these units too: install
-  one or the other. }
+  bin) and the 64-bit one (in bin64). It holds TreeSitter4D's unit too: delphipp's DelphiPPIDE
+  requires this package rather than containing any of its units, so the two install together. }
 
 {$DESCRIPTION 'DelfNav: go to implementation and find references'}
 {$DESIGNONLY}

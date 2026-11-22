@@ -53,7 +53,9 @@ delphi\ide\build.cmd            delphi\ide\bin\win32\DelfNavIDE.bpl and ...\win6
 
 Install the package from the IDE (Component > Install Packages > Add): the `win32` one in the
 32-bit IDE (`bin\bds.exe`), the `win64` one in the 64-bit IDE (`bin64\bds.exe`). delphipp's
-`DelphiPPIDE.bpl` contains DelfNav's units too: install one or the other, not both.
+`DelphiPPIDE.bpl` (the rules) *requires* `DelfNavIDE.bpl`: the two install together, DelfNavIDE
+first. delphipp's `delphi\ide\build.cmd install` builds both from its submodule and puts them in
+the IDE's package folder, where Windows finds DelfNavIDE whenever DelphiPPIDE loads.
 
 `NavSweep.exe <folder>` asks the index the way an editor would, over a whole repository, and
 counts and times the answers: the check run over 42 repositories before each change.
