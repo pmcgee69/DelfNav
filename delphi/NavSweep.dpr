@@ -154,6 +154,10 @@ begin
           Q := TStopwatch.StartNew;
           const D = Definitions(S.Path, Text, S.Line, S.Ch, 600000);
           Defs.Add(Q.Elapsed.TotalMilliseconds, D <> nil, At);
+          // the definition's place too: a change to the index shows in it (22 Nov, a unit's
+          // routines' overloads)
+          if (Dump <> nil) and (D <> nil) then
+            Dump.Add(Format('def %s:%d:%d  %s:%d:%d', [S.Path, S.Line, S.Ch, D[0].Path, D[0].Line, D[0].Col]));
         except
           Inc(Defs.Failed);
         end;
