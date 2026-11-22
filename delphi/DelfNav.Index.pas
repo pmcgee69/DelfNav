@@ -59,8 +59,8 @@ function Definitions(const Path, Text: string; Line, Character: Integer;
 function TypeDefinitions(const Path, Text: string; Line, Character: Integer;
   WaitMs: Cardinal = 30000): TArray<TImplTarget>;
 
-// how many overloads the method declared at Line (from 1), Col (from 0) of the file at Path has,
-// itself included: 0 when no method of the index is declared there (a unit's routine, a field)
+// how many overloads the method or routine declared at Line (from 1), Col (from 0) of the file at
+// Path has, itself included: a routine's in its own unit only; 0 when none is declared there
 function Overloads(const Path: string; Line, Col: Integer): Integer;
 
 // every use of the name at Line, Character across the index: each identifier of that name whose
@@ -162,6 +162,10 @@ var
   Aliases: TDictionary<string, string>; // `IRowMapper = IRowMapper<TObject>;`: irowmapper -> irowmapper<tobject>
   Enums: TDictionary<string, string>; // an enumeration's value -> its type, in full: ntfinally -> tsyntaxnodetype
   Owners: TDictionary<string, Integer>; // 'f:' + a function, 'a:' + an alias, 'e:' + an enum value -> the file that gave it
+  // a file -> its own routines (not methods) -> their overloads, as declared: an interface's
+  // declaration and its body once (the user, 22 Nov: "we don't now about normal functions that
+  // can also be overloaded??"; Names keeps a routine's first place only)
+  Routines: TObjectDictionary<Integer, TObjectDictionary<string, TList<TSig>>>;
   Indexed: TDictionary<Integer, Integer>; // a file -> its text's hash, as indexed
                                       // (the first unit's, for a name in two)
   Stopping: Boolean;                 // the unit finalizing (the IDE unloading its package)
@@ -453,6 +457,36 @@ begin
     Result := Result + ':' + S.Res;
 end;
 
+// one overload of a file's own routine, named by Id in the heading Proc. A declaration (an
+// interface's, a forward one) is kept with D 'h'; a body (D 'b') only when no declaration of the
+// name came first, since a body may leave its parameters out (`function Foo: Integer;` for the
+// interface's `function Foo(A: Integer): Integer;`)
+procedure AddRoutine(FileIdx: Integer; const Src: TBytesA; const Proc, Id: TSNode; IsBody: Boolean);
+begin
+  var Mine: TObjectDictionary<string, TList<TSig>>;
+  if not Routines.TryGetValue(FileIdx, Mine) then
+  begin
+    Mine := TObjectDictionary<string, TList<TSig>>.Create([doOwnsValues]);
+    Routines.Add(FileIdx, Mine);
+  end;
+  const Name = Txt(Src, Id).ToLower;
+  var L: TList<TSig>;
+  if not Mine.TryGetValue(Name, L) then
+  begin
+    L := TList<TSig>.Create;
+    Mine.Add(Name, L);
+  end;
+  if IsBody then
+    for var S in L do
+      if S.D = 'h' then
+        Exit;
+  var S := SigOf(Src, Proc);
+  S.Line := LineOf(Id);
+  S.Col := ts_node_start_point(Id).Column;
+  S.D := if IsBody then 'b' else 'h';
+  L.Add(S);
+end;
+
 procedure AddMembers(Info: TTypeInfo; const Src: TBytesA; const N: TSNode);
 begin
   for var C in Kids(N) do
@@ -691,7 +725,10 @@ begin
         const Id = FirstOf(H, 'identifier');
         const T = FirstOf(H, 'typeref');
         if not IsNull(Id) then
+        begin
           AddName(FileIdx, Src, Id);  // a routine with no declaration in an interface section
+          AddRoutine(FileIdx, Src, H, Id, True);
+        end;
         if not IsNull(Id) and not IsNull(T) and not Funcs.ContainsKey(Txt(Src, Id).ToLower) then
           AddFunc(FileIdx, Txt(Src, Id).ToLower, Full(Txt(Src, T)));
       end;
@@ -703,7 +740,10 @@ begin
     const Id = FirstOf(N, 'identifier');
     const T = FirstOf(N, 'typeref');
     if not IsNull(Id) then
+    begin
       AddName(FileIdx, Src, Id);
+      AddRoutine(FileIdx, Src, N, Id, False);
+    end;
     if not IsNull(Id) and not IsNull(T) and not Funcs.ContainsKey(Txt(Src, Id).ToLower) then
       AddFunc(FileIdx, Txt(Src, Id).ToLower, Full(Txt(Src, T)));
   end
@@ -786,7 +826,7 @@ begin
       try
         Lock.Enter;
         try
-          Paths.Clear; Globals.Clear; Types.Clear; Impls.Clear; Funcs.Clear; ImplCache.Clear; Names.Clear; Aliases.Clear; Enums.Clear; Owners.Clear; Indexed.Clear;
+          Paths.Clear; Globals.Clear; Types.Clear; Impls.Clear; Funcs.Clear; ImplCache.Clear; Names.Clear; Aliases.Clear; Enums.Clear; Owners.Clear; Indexed.Clear; Routines.Clear;
           try
             Build(Deep, Flat);
           except
@@ -1076,6 +1116,7 @@ begin
       Aliases.Remove(K.Substring(2));
   end;
   Globals[Idx].Clear;
+  Routines.Remove(Idx);
   ImplCache.Clear;
   const Parser = ts_parser_new;
   try
@@ -1594,6 +1635,13 @@ begin
           for var S in L do
             if (S.Line = Line) and (S.Col = Col) then
               Exit(L.Count);
+    // a routine of the unit's own: its overloads in that unit (across units: BIG_TODO 3)
+    var Mine: TObjectDictionary<string, TList<TSig>>;
+    if Routines.TryGetValue(Idx, Mine) then
+      for var L in Mine.Values do
+        for var S in L do
+          if (S.Line = Line) and (S.Col = Col) then
+            Exit(L.Count);
   finally
     Lock.Leave;
   end;
@@ -2399,6 +2447,7 @@ initialization
   Aliases := TDictionary<string, string>.Create;
   Owners := TDictionary<string, Integer>.Create;
   Indexed := TDictionary<Integer, Integer>.Create;
+  Routines := TObjectDictionary<Integer, TObjectDictionary<string, TList<TSig>>>.Create([doOwnsValues]);
 
 finalization
   // an index still being built stops at its next file; nothing is freed under it (the IDE
@@ -2407,6 +2456,7 @@ finalization
   while TInterlocked.CompareExchange(Running, 0, 0) > 0 do
     Sleep(10);
   ImplCache.Free;
+  Routines.Free;
   Names.Free;
   Aliases.Free;
   Owners.Free;
