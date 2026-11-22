@@ -1,7 +1,7 @@
 # Go to implementation, in the IDE
 
 In Delphi, Ctrl+click on `x.DoSomething()` goes to the interface's declaration. With the IDE
-package (`delphi\ide\DelphiPPIDE.bpl`, see [its README](../../delphi/ide/README.md)) installed,
+package (`delphi\ide\DelfNavIDE.bpl`, built by `delphi/ide/build.cmd`; see the [README](../../README.md)) installed,
 **Ctrl+Shift+click** goes to the classes that implement it, or right-click the method's name and
 choose **Go to Implementation**, just below Find Declaration. With one implementation it goes
 straight there; with more, a menu lists them, each with its unit and line.
@@ -19,7 +19,7 @@ Open `GoToImpl.dpr` here. In `Shapes.pas`, at the end:
 | `procedure DoSomething; virtual;` in `TBase` | the same two |
 | `function TBase.Value` (not virtual) | `TBase.Value` alone |
 
-**Find References (delphipp)**, on the same menu, lists every use in the Messages view. Here, on
+**Find References (delfnav)**, on the same menu, lists every use in the Messages view. Here, on
 `DoSomething` in `IMyInterface`: the declaration, `x.DoSomething()` in `Use`, and in `Fields.pas`
 `FService.DoSomething`, `FKids.DoSomething` (an `IChild` inherits it) and
 `CreateMyObject.DoSomething`. On `IMyInterface` itself: its 10 uses, both units.
@@ -43,7 +43,7 @@ Delphi 13's own language server, `DelphiLSP.exe`, says it provides implementatio
 (`implementationProvider: true`), but asked directly (22 Nov 2026, with
 [`tools/delphilsp-probe`](../../tools/delphilsp-probe/README.md)) it's the old Ctrl+Shift+Up/Down:
 
-| Asked at | DelphiLSP: definition | DelphiLSP: implementation | delphipp: implementation |
+| Asked at | DelphiLSP: definition | DelphiLSP: implementation | delfnav: implementation |
 |---|---|---|---|
 | `S.Area`, `S` an interface | the interface's `Area` | **nothing** | each class's `Area` |
 | `A.Speak`, `Speak` virtual, abstract | `TAnimal.Speak` | **nothing** | each override |
@@ -53,4 +53,4 @@ Delphi 13's own language server, `DelphiLSP.exe`, says it provides implementatio
 
 It has no references at all (`textDocument/references`: *Method not found*), and no type
 definition. The IDE talks to one DelphiLSP (with two agents it starts, `-Name Agent0` and
-`Agent1`), with no setting for another server; delphipp's package works beside it.
+`Agent1`), with no setting for another server; delfnav's package works beside it.

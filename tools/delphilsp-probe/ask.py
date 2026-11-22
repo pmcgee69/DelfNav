@@ -1,8 +1,10 @@
 """Ask a private DelphiLSP for definition / implementation / references at given places.
-usage: ask.py <settings.delphilsp.json> <file.pas|dpr> line:col[:label] ...   (1-based)"""
-import json, pathlib, subprocess, sys, threading, time, urllib.parse
+usage: ask.py <settings.delphilsp.json> <file.pas|dpr> line:col[:label] ...   (1-based)
+Another server instead of DelphiLSP: SERVER=<its exe> ask.py ...  (started with --lsp)"""
+import json, os, pathlib, subprocess, sys, threading, time, urllib.parse
 
 EXE = r'C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\DelphiLSP.exe'
+SERVER = os.environ.get('SERVER', '')
 
 
 def uri(p):
@@ -11,7 +13,7 @@ def uri(p):
 
 settings, src = sys.argv[1], sys.argv[2]
 spots = sys.argv[3:]
-p = subprocess.Popen([EXE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+p = subprocess.Popen([SERVER, '--lsp'] if SERVER else [EXE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 inbox, lock = [], threading.Lock()
 
 
@@ -74,7 +76,7 @@ send({'jsonrpc': '2.0', 'method': 'textDocument/didOpen',
 
 # wait for the project to load: the first diagnostics, or 60 s
 t = time.time()
-while time.time() - t < 60 and not any(m.get('method') == 'textDocument/publishDiagnostics' for m in notes(0)):
+while not SERVER and time.time() - t < 60 and not any(m.get('method') == 'textDocument/publishDiagnostics' for m in notes(0)):
     time.sleep(0.3)
 print('loaded after %.1f s' % (time.time() - t))
 for m in notes(0):

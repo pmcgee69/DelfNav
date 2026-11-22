@@ -1,0 +1,14 @@
+*.dcu
+*.exe
+*.bpl
+*.dcp
+delphi/TreeSitter4D/
+delphi/bin/
+delphi/ide/bin/
+__history/
+__recovery/
+__pycache__/
+*.res
+*.dproj.local
+*.identcache
+*.delphilsp.json

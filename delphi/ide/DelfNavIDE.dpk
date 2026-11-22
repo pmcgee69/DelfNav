@@ -1,0 +1,23 @@
+package DelfNavIDE;
+
+{ Go to implementation, definition, type definition and find references in the Delphi IDE's
+  editor: see DelfNav.IDE.pas. Built by build.cmd beside it, for the 32-bit IDE (bds.exe in
+  bin) and the 64-bit one (in bin64). delphipp's DelphiPPIDE contains these units too: install
+  one or the other. }
+
+{$DESCRIPTION 'delfnav: go to implementation and find references'}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  designide;
+
+contains
+  DelfNav.IDE in 'DelfNav.IDE.pas',
+  DelfNav.IDE.Hint in 'DelfNav.IDE.Hint.pas',
+  DelfNav.Index in '..\DelfNav.Index.pas',
+  TreeSitter.Api in '..\TreeSitter4D\delphi\TreeSitter.Api.pas';
+
+end.
