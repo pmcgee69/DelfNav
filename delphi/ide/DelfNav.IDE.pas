@@ -1040,16 +1040,18 @@ begin
   NotifierIndex := (BorlandIDEServices as INTACodeEditorServices).AddEditorEventsNotifier(Notifier);
   try
     // each list after the one before, not all after Identifier (that left their order to the IDE,
-    // uneven): Find Declaration, Go to Implementation, Go to Type Definition, Find References
+    // uneven). The order is the user's (22 Nov, "the order must be find impl find refs goto impl
+    // goto type", "find impl" read as Find Declaration): Find Declaration, Find References,
+    // Go to Implementation, Go to Type Definition
     const Menu = (BorlandIDEServices as IOTAEditorServices).GetEditorLocalMenu;
     Menu.RegisterActionList(Notifier.FDeclActions, DeclCategory, cEdMenuCatIdentifier);
     DeclAdded := True;
-    Menu.RegisterActionList(Notifier.FActions, MenuCategory, DeclCategory);
+    Menu.RegisterActionList(Notifier.FRefsActions, RefsCategory, DeclCategory);
+    RefsAdded := True;
+    Menu.RegisterActionList(Notifier.FActions, MenuCategory, RefsCategory);
     MenuAdded := True;
     Menu.RegisterActionList(Notifier.FTypeActions, TypeCategory, MenuCategory);
     TypeAdded := True;
-    Menu.RegisterActionList(Notifier.FRefsActions, RefsCategory, TypeCategory);
-    RefsAdded := True;
   except
     // Ctrl+Shift+click alone
   end;
