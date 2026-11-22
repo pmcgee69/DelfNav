@@ -1149,9 +1149,13 @@ begin
     // what they are references to, qualified, and its unit (the user, 22 Nov: "in the msg windows
     // "291 references" should also make clear what the ref was from")
     var Subject := '';
+    var Short := 'the name';          // as the last line asks for it: right-click it, in the editor
     const Decl = Query(View, View.CursorPos, akDeclaration, 0);
     if Length(Decl) = 1 then
+    begin
       Subject := Format(' to %s (%s)', [Decl[0].Name, ChangeFileExt(ExtractFileName(Decl[0].Path), '')]);
+      Short := Decl[0].Name.Substring(Decl[0].Name.LastIndexOf('.') + 1);
+    end;
     const Messages = BorlandIDEServices as IOTAMessageServices;
     var Group := Messages.GetGroup(RefsGroup);
     if Group = nil then
@@ -1177,8 +1181,10 @@ begin
       Messages.AddToolMessage(T.Path, T.Name, 'DelfNav', T.Line, T.Col + 1, nil, Ref, Group);
     end;
     if More.Next >= 0 then
-      Messages.AddTitleMessage(Format('... %d of %d units read in half a second: right-click here, ' +
-        'Find More References (DelfNav), for the rest', [More.Read, More.Total]), Group);
+      // the editor's menu has it, not the Messages view's (the user, 23 Nov: "this text is
+      // incorrect", then this wording)
+      Messages.AddTitleMessage(Format('... %d of %d units read in half a second: for the rest, ' +
+        'right-click %s - Find More References (DelfNav)', [More.Read, More.Total, Short]), Group);
     Messages.ShowMessageView(Group);
   except
     // the editor goes on whatever happens here
