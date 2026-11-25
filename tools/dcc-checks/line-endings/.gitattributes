@@ -1,0 +1,3 @@
+# The cases are their bytes: a lone CR, a lone LF. No line-ending conversion, on any clone
+# (core.autocrlf=true would make CommentEndLF.dpr's lone LF a CRLF, and the case would test nothing).
+*.dpr -text
