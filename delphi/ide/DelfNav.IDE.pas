@@ -520,9 +520,11 @@ begin
     const View = Services.GetViewForEditor(Editor);
     if (View = nil) or (View.Buffer = nil) then
       Exit;
-    // a .dpps file has the rules' hovers (delphipp's DelphiPP.IDE): not two hints at once
+    // a .dpps file has the rules' hovers (delphipp's DelphiPP.IDE), and a .delf file delfc's
+    // (Delf's DelfIDE): not two hints at once (the user, 27 Nov, three popups on one name in a
+    // .delf file: "make the delfnav change")
     const Low = View.Buffer.FileName.ToLower;
-    if Low.EndsWith('.dpps') or Low.EndsWith('.dpps.pas') then
+    if Low.EndsWith('.dpps') or Low.EndsWith('.dpps.pas') or Low.EndsWith('.delf') then
       Exit;
     const State = Services.EditorState[Editor];
     var Col, Visible: Integer;
